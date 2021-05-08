@@ -28,10 +28,11 @@ import java.util.List;
 public class FileFragment extends Fragment {
 
     private TextView tv_path;
-    private FloatingActionButton fab,new_folder,save_as;
+    private FloatingActionButton new_folder;
+    private FloatingActionButton save_as;
     private boolean flag = true;
     private FileAdapter adapter;
-    private List<File> list = new ArrayList<>();
+    private final List<File> list = new ArrayList<>();
     private File file;
     private boolean operation = true;
     private EditorFragment editorFragment;
@@ -65,17 +66,17 @@ public class FileFragment extends Fragment {
         });
     }
 
-    private void initView(){
-        file = new File(FileService.getStoragePath(getContext(),false));
+    private void initView() {
+        file = new File(FileService.getStoragePath(getContext(), false));
         RecyclerView recyclerView = getActivity().findViewById(R.id.list);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(linearLayoutManager);
         tv_path = getActivity().findViewById(R.id.path);
-        adapter = new FileAdapter(list,this);
+        adapter = new FileAdapter(list, this);
         recyclerView.setAdapter(adapter);
         load(file);
 
-        fab = getView().findViewById(R.id.fab);
+        FloatingActionButton fab = getView().findViewById(R.id.fab);
         new_folder = getView().findViewById(R.id.new_folder);
         save_as = getView().findViewById(R.id.save_as);
         new_folder.hide();
@@ -84,7 +85,7 @@ public class FileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (flag) {
-                    if (editorFragment != null && !operation){
+                    if (editorFragment != null && !operation) {
                         save_as.show();
                         save_as.animate().translationY(-400).start();
                     }
@@ -118,7 +119,7 @@ public class FileFragment extends Fragment {
         });
     }
 
-    public void load(File file){
+    public void load(File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             list.clear();
@@ -126,13 +127,13 @@ public class FileFragment extends Fragment {
             Collections.sort(list);
             tv_path.setText(file.getPath());
             adapter.notifyDataSetChanged();
-        } else if (operation){
-            ((MainActivity)getActivity()).openFile(file);
+        } else if (operation) {
+            ((MainActivity) getActivity()).openFile(file);
             getActivity().onBackPressed();
         }
     }
 
-    private void newFolder(final File file){
+    private void newFolder(final File file) {
         final String path = file.getPath();
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.edit_text, null);
@@ -143,20 +144,21 @@ public class FileFragment extends Fragment {
                 .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                       File file = new File(path + "/" + editText.getText());
-                        if (!file.exists()){
-                            file.mkdir();
-                            list.add(file);
-                            adapter.notifyDataSetChanged();
-                            Toast.makeText(getActivity(),"创建成功",Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getActivity(),"创建失败",Toast.LENGTH_SHORT).show();
+                        File file = new File(path + "/" + editText.getText());
+                        if (!file.exists()) {
+                            if (file.mkdir()) {
+                                list.add(file);
+                                adapter.notifyDataSetChanged();
+                                Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getActivity(), "创建失败", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
-                }).setNegativeButton("取消",null).show();
+                }).setNegativeButton("取消", null).show();
     }
 
-    private void saveAs(final File file){
+    private void saveAs(final File file) {
         final String path = file.getPath();
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.edit_text, null);
@@ -168,67 +170,61 @@ public class FileFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         File file = new File(path + "/" + editText.getText());
-                        if (!file.exists()){
-                            try {
-                                file.createNewFile();
-                            } catch (Exception e){
-                                e.printStackTrace();
-                            }
-                            if (editorFragment.getFile() != null){
+                        try {
+                            if (file.createNewFile()) {
+                                if (editorFragment.getFile() != null) {
                                     String value = editorFragment.getText();
-                                    FileService.write(value,file);
+                                    FileService.write(value, file);
                                     editorFragment.setFile(file);
                                     editorFragment.setFilename(String.valueOf(editText.getText()));
+                                } else {
+                                    editorFragment.setFile(file);
+                                    editorFragment.setFilename(String.valueOf(editText.getText()));
+                                    editorFragment.write();
+                                    ((MainActivity) getActivity()).saveAs(file);
+                                }
+                                list.add(file);
+                                adapter.notifyDataSetChanged();
+                                Toast.makeText(getActivity(), "保存成功", Toast.LENGTH_SHORT).show();
+                                getActivity().onBackPressed();
                             } else {
-                                editorFragment.setFile(file);
-                                editorFragment.setFilename(String.valueOf(editText.getText()));
-                                editorFragment.write();
-                                ((MainActivity) getActivity()).saveAs(file);
-                            }
-                            list.add(file);
-                            adapter.notifyDataSetChanged();
-                            Toast.makeText(getActivity(),"保存成功",Toast.LENGTH_SHORT).show();
-                            getActivity().onBackPressed();
-                        } else {
-                            new AlertDialog.Builder(getActivity())
-                                    .setTitle("文件已存在，是否覆盖文件")
-                                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            File file = new File(path + "/" + editText.getText());
-                                            try {
-                                                file.createNewFile();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
+                                new AlertDialog.Builder(getActivity())
+                                        .setTitle("文件已存在，是否覆盖文件")
+                                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                File file = new File(path + "/" + editText.getText());
+                                                if (editorFragment.getFile() != null) {
+                                                    String value = editorFragment.getText();
+                                                    FileService.write(value, file);
+                                                    editorFragment.setFile(file);
+                                                    editorFragment.setFilename(String.valueOf(editText.getText()));
+                                                } else {
+                                                    editorFragment.setFile(file);
+                                                    editorFragment.setFilename(String.valueOf(editText.getText()));
+                                                    editorFragment.write();
+                                                    ((MainActivity) getActivity()).saveAs(file);
+                                                }
+                                                list.add(file);
+                                                adapter.notifyDataSetChanged();
+                                                Toast.makeText(getActivity(), "保存成功", Toast.LENGTH_SHORT).show();
+                                                getActivity().onBackPressed();
                                             }
-                                            if (editorFragment.getFile() != null){
-                                                String value = editorFragment.getText();
-                                                FileService.write(value,file);
-                                                editorFragment.setFile(file);
-                                                editorFragment.setFilename(String.valueOf(editText.getText()));
-                                            } else {
-                                                editorFragment.setFile(file);
-                                                editorFragment.setFilename(String.valueOf(editText.getText()));
-                                                editorFragment.write();
-                                                ((MainActivity) getActivity()).saveAs(file);
-                                            }
-                                            list.add(file);
-                                            adapter.notifyDataSetChanged();
-                                            Toast.makeText(getActivity(),"保存成功",Toast.LENGTH_SHORT).show();
-                                            getActivity().onBackPressed();
-                                        }
-                                    }).setNegativeButton("取消",null).show();
+                                        }).setNegativeButton("取消", null).show();
 
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
-                }).setNegativeButton("取消",null).show();
+                }).setNegativeButton("取消", null).show();
     }
 
-    public void backLast(){
-        try{
+    public void backLast() {
+        try {
             load(new File(file.getParent()));
             file = new File(file.getParent());
-        } catch (Exception e){
+        } catch (Exception e) {
             getActivity().onBackPressed();
         }
     }

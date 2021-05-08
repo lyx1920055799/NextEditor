@@ -1,5 +1,16 @@
 package com.starrysky.nextor;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -12,15 +23,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -47,20 +49,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu,menu);
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         MenuItem settings = menu.findItem(R.id.settings);
         MenuItem edit = menu.findItem(R.id.edit);
         MenuItem file = menu.findItem(R.id.file);
-        if (getSupportFragmentManager().findFragmentByTag("settings") != null || getSupportFragmentManager().findFragmentByTag("file") != null){
+        if (getSupportFragmentManager().findFragmentByTag("settings") != null || getSupportFragmentManager().findFragmentByTag("file") != null) {
             settings.setVisible(false);
             edit.setVisible(false);
             file.setVisible(false);
             toggle.setDrawerIndicatorEnabled(false);
             actionBar.setDisplayHomeAsUpEnabled(true);
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-            if (getSupportFragmentManager().findFragmentByTag("settings") != null){
+            if (getSupportFragmentManager().findFragmentByTag("settings") != null) {
                 actionBar.setTitle("设置");
-            } else if (getSupportFragmentManager().findFragmentByTag("file") != null){
+            } else if (getSupportFragmentManager().findFragmentByTag("file") != null) {
                 actionBar.setTitle("文件");
             }
         } else {
@@ -70,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(false);
             toggle.setDrawerIndicatorEnabled(true);
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            if (editorFragment != null){
+            if (editorFragment != null) {
                 actionBar.setTitle(editorFragment.getFilename());
                 menuItem.setTitle(editorFragment.getFilename());
             } else {
@@ -82,37 +84,52 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                break;
-            case R.id.settings:
-                startFragment(R.id.container_layout, new SettingsFragment(), "settings");
-                invalidateOptionsMenu();
-                break;
-            case R.id.new_file:
-                newFile();
-                break;
-            case R.id.save:
-                if (editorFragment != null) {
-                    if (editorFragment.getFile() != null) {
-                        save();
-                    } else {
-                        saveAs();
-                    }
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            drawerLayout.openDrawer(GravityCompat.START);
+        } else if (itemId == R.id.settings) {
+            startFragment(R.id.container_layout, new SettingsFragment(), "settings");
+            invalidateOptionsMenu();
+        } else if (itemId == R.id.new_file) {
+            newFile();
+        } else if (itemId == R.id.save) {
+            if (editorFragment != null) {
+                if (editorFragment.getFile() != null) {
+                    save();
+                } else {
+                    saveAs();
                 }
-                break;
-            case R.id.save_as:
-                saveAs();
-                break;
-            case R.id.close:
-                close();
-                break;
-            case R.id.open_file:
-                openFile();
-                break;
-                default:
-                    break;
+            }
+        } else if (itemId == R.id.save_as) {
+            saveAs();
+        } else if (itemId == R.id.close) {
+            close();
+        } else if (itemId == R.id.open_file) {
+            openFile();
+        } else if (itemId == R.id.undo) {
+            if (editorFragment != null) {
+                editorFragment.undo();
+            }
+        } else if (itemId == R.id.redo) {
+            if (editorFragment != null) {
+                editorFragment.redo();
+            }
+        } else if (itemId == R.id.select_all) {
+            if (editorFragment != null) {
+                editorFragment.selectAll();
+            }
+        } else if (itemId == R.id.copy) {
+            if (editorFragment != null) {
+                editorFragment.copyAndCut("copy");
+            }
+        } else if (itemId == R.id.cut) {
+            if (editorFragment != null) {
+                editorFragment.copyAndCut("cut");
+            }
+        } else if (itemId == R.id.paste) {
+            if (editorFragment != null) {
+                editorFragment.paste();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -123,26 +140,26 @@ public class MainActivity extends AppCompatActivity {
         invalidateOptionsMenu();
     }
 
-    private void init(){
+    private void init() {
         immersion();
         permission();
         initView();
     }
 
-    private void initView(){
+    private void initView() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.navigation_view );
+        navigationView = findViewById(R.id.navigation_view);
         navigationView.setItemIconTintList(null);
-        toggle = new ActionBarDrawerToggle(this, drawerLayout,toolbar,R.string.app_name,R.string.app_name);
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.app_name, R.string.app_name);
         toggle.syncState();
         drawerLayout.addDrawerListener(toggle);
         toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FileFragment fileFragment = (FileFragment) getSupportFragmentManager().findFragmentByTag("file");
-                if(fileFragment == null) {
+                if (fileFragment == null) {
                     if (!toggle.isDrawerIndicatorEnabled()) {
                         onBackPressed();
                     }
@@ -162,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 item.setChecked(true);
                 menuItem = item;
                 drawerLayout.closeDrawers();
-                for (int i = 0; i < index; i++){
+                for (int i = 0; i < index; i++) {
                     if (getSupportFragmentManager().findFragmentByTag(String.valueOf(i)) != null) {
                         EditorFragment fragment = (EditorFragment) getSupportFragmentManager().findFragmentByTag(String.valueOf(i));
                         if (fragment != null) {
@@ -170,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
                                 getSupportFragmentManager().beginTransaction().show(fragment).commit();
                                 editorFragment = fragment;
                                 actionBar.setTitle(editorFragment.getFilename());
+                                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
                             } else {
                                 getSupportFragmentManager().beginTransaction().hide(fragment).commit();
                             }
@@ -181,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void immersion(){
+    private void immersion() {
         View view = getWindow().getDecorView();
         if (Build.VERSION.SDK_INT >= 21) {
             view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
@@ -210,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(id, fragment, tag);
         List<Fragment> list = fragmentManager.getFragments();
-        for (int j = 0; j < list.size(); j++){
+        for (int j = 0; j < list.size(); j++) {
             fragmentTransaction.hide(list.get(j));
         }
         if (fragment.getTag() != null && (fragment.getTag().equals("settings") || fragment.getTag().equals("file"))) {
@@ -220,29 +239,29 @@ public class MainActivity extends AppCompatActivity {
         fragmentManager.executePendingTransactions();
         try {
             editorFragment = (EditorFragment) fragment;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void newFile(){
-        menuItem = navigationView.getMenu().add(1,index,0,"untitled").setIcon(R.drawable.my_file);
+    public void newFile() {
+        menuItem = navigationView.getMenu().add(1, index, 0, "untitled").setIcon(R.drawable.my_file);
         EditorFragment editorFragment = new EditorFragment();
         editorFragment.setFilename("untitled");
-        startFragment(R.id.container_layout,editorFragment,String.valueOf(index));
+        startFragment(R.id.container_layout, editorFragment, String.valueOf(index));
         navigationView.getMenu().findItem(index).setCheckable(true).setChecked(true);
         actionBar.setTitle(navigationView.getMenu().findItem(index).getTitle());
         index++;
     }
 
-    public void save(){
+    public void save() {
         if (editorFragment != null) {
             editorFragment.write();
             actionBar.setTitle(editorFragment.getFilename());
         }
     }
 
-    public void saveAs(){
+    public void saveAs() {
         if (editorFragment != null) {
             FileFragment fileFragment = new FileFragment();
             fileFragment.setEditorFragment(editorFragment);
@@ -252,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void saveAs(File file){
+    public void saveAs(File file) {
         String name = file.getName();
         MenuItem item = null;
         if (editorFragment.getTag() != null) {
@@ -264,24 +283,24 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setTitle(name);
     }
 
-    public void openFile(){
-            FileFragment fileFragment = new FileFragment();
-            startFragment(R.id.container_layout, fileFragment, "file");
-            invalidateOptionsMenu();
+    public void openFile() {
+        FileFragment fileFragment = new FileFragment();
+        startFragment(R.id.container_layout, fileFragment, "file");
+        invalidateOptionsMenu();
     }
 
-    public void openFile(File file){
+    public void openFile(File file) {
         boolean flag = true;
-        List list = getSupportFragmentManager().getFragments();
-        for (int i = 0; i < list.size(); i++){
+        List<Fragment> list = getSupportFragmentManager().getFragments();
+        for (int i = 0; i < list.size(); i++) {
             try {
                 EditorFragment fragment = (EditorFragment) list.get(i);
-                if (file.getPath().equals(fragment.getFile().getPath())){
-                    Toast.makeText(this,"文件已经打开",Toast.LENGTH_SHORT).show();
+                if (file.getPath().equals(fragment.getFile().getPath())) {
+                    Toast.makeText(this, "文件已经打开", Toast.LENGTH_SHORT).show();
                     flag = false;
                     break;
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -298,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void close(){
+    public void close() {
         if (editorFragment != null) {
             int num = 0;
             if (editorFragment.getTag() != null) {
@@ -330,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void setName(String str){
+    public void setName(String str) {
         actionBar.setTitle(str);
         menuItem.setTitle(str);
     }

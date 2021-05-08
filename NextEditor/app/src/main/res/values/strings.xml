@@ -12,8 +12,6 @@
     <string name="save_as">另存为</string>
     <string name="close">关闭</string>
     <string name="read_only">只读</string>
-    <string name="theme">主题</string>
-    <string name="current">当前</string>
     <string name="select_all">全选</string>
     <string name="cut">剪切</string>
     <string name="copy">复制</string>

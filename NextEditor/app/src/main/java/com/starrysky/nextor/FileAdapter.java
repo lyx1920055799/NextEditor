@@ -17,8 +17,8 @@ import java.util.List;
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
-    private List<File> mList;
-    private FileFragment mFragment;
+    private final List<File> mList;
+    private final FileFragment mFragment;
 
     public FileAdapter(List<File> list, FileFragment fragment) {
         this.mList = list;
@@ -78,7 +78,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
         return mList.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         FrameLayout item;
         TextView name,info;

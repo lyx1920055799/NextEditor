@@ -77,12 +77,6 @@
                 android:orderInCategory="100"
                 android:title="@string/paste">
             </item>
-            <item
-                android:id="@+id/read_only"
-                android:orderInCategory="100"
-                android:title="@string/read_only"
-                android:checkable="true">
-            </item>
         </menu>
     </item>
 
