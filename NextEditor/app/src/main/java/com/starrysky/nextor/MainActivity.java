@@ -2,6 +2,7 @@ package com.starrysky.nextor;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -61,9 +63,9 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
             if (getSupportFragmentManager().findFragmentByTag("settings") != null) {
-                actionBar.setTitle("设置");
+                actionBar.setTitle(R.string.settings);
             } else if (getSupportFragmentManager().findFragmentByTag("file") != null) {
-                actionBar.setTitle("文件");
+                actionBar.setTitle(R.string.file);
             }
         } else {
             settings.setVisible(true);
@@ -97,13 +99,13 @@ public class MainActivity extends AppCompatActivity {
                 if (editorFragment.getFile() != null) {
                     save();
                 } else {
-                    saveAs();
+                    saveAs("null");
                 }
             }
         } else if (itemId == R.id.save_as) {
-            saveAs();
+            saveAs("null");
         } else if (itemId == R.id.close) {
-            close();
+            closeDialog();
         } else if (itemId == R.id.open_file) {
             openFile();
         } else if (itemId == R.id.undo) {
@@ -245,13 +247,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void newFile() {
-        menuItem = navigationView.getMenu().add(1, index, 0, "untitled").setIcon(R.drawable.my_file);
+        menuItem = navigationView.getMenu().add(1, index, 0, R.string.untitled).setIcon(R.drawable.my_file);
         EditorFragment editorFragment = new EditorFragment();
-        editorFragment.setFilename("untitled");
+        editorFragment.setFilename(getResources().getString(R.string.untitled));
         startFragment(R.id.container_layout, editorFragment, String.valueOf(index));
         navigationView.getMenu().findItem(index).setCheckable(true).setChecked(true);
         actionBar.setTitle(navigationView.getMenu().findItem(index).getTitle());
         index++;
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
     }
 
     public void save() {
@@ -261,13 +265,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void saveAs() {
+    public void saveAs(String fun) {
         if (editorFragment != null) {
             FileFragment fileFragment = new FileFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("fun", fun);
+            fileFragment.setArguments(bundle);
             fileFragment.setEditorFragment(editorFragment);
             fileFragment.setOperation(false);
             startFragment(R.id.container_layout, fileFragment, "file");
             invalidateOptionsMenu();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
         }
     }
 
@@ -284,6 +293,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openFile() {
+        if (editorFragment != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
+        }
         FileFragment fileFragment = new FileFragment();
         startFragment(R.id.container_layout, fileFragment, "file");
         invalidateOptionsMenu();
@@ -296,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditorFragment fragment = (EditorFragment) list.get(i);
                 if (file.getPath().equals(fragment.getFile().getPath())) {
-                    Toast.makeText(this, "文件已经打开", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.file_opened, Toast.LENGTH_SHORT).show();
                     flag = false;
                     break;
                 }
@@ -318,6 +331,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void close() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
         if (editorFragment != null) {
             int num = 0;
             if (editorFragment.getTag() != null) {
@@ -327,7 +342,8 @@ public class MainActivity extends AppCompatActivity {
             navigationView.getMenu().removeItem(num);
             List<Fragment> list = new ArrayList<>();
             for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {
-                if (!getSupportFragmentManager().getFragments().get(i).getTag().equals(String.valueOf(num))) {
+                String tag = getSupportFragmentManager().getFragments().get(i).getTag();
+                if (isNumeric(tag) && !tag.equals(String.valueOf(num))) {
                     list.add(getSupportFragmentManager().getFragments().get(i));
                 }
             }
@@ -352,5 +368,56 @@ public class MainActivity extends AppCompatActivity {
     public void setName(String str) {
         actionBar.setTitle(str);
         menuItem.setTitle(str);
+    }
+
+    public static boolean isNumeric(String str) {
+        if (str == null) return false;
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c)) return false;
+        }
+        return true;
+    }
+
+
+    public void closeDialog() {
+        if (editorFragment != null) {
+            if (editorFragment.getFilename().charAt(0) == '*') {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle(R.string.warning);
+                builder.setMessage(R.string.is_save);
+                builder.setCancelable(true);
+                builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (editorFragment.getFile() != null) {
+                            save();
+                        } else {
+                            saveAs("close");
+                        }
+                        if (editorFragment.getFile() != null) {
+                            close();
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        close();
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            } else {
+                close();
+            }
+        }
     }
 }

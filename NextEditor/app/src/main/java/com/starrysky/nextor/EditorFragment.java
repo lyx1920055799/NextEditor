@@ -25,8 +25,9 @@ public class EditorFragment extends Fragment implements TextWatcher {
     private EditText editText;
     private String filename;
     private File file;
-    private boolean flag = false;
+    private boolean flag = true;
     private boolean flag_stack = true;
+    private boolean after_last = false;
 
     private final Stack<String> uStack = new Stack<>();
     private final Stack<String> rStack = new Stack<>();
@@ -60,9 +61,30 @@ public class EditorFragment extends Fragment implements TextWatcher {
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        if (flag) {
+            if (filename.charAt(0) != '*') {
+                filename = "*" + filename;
+                ((MainActivity) getActivity()).setName(filename);
+            }
+        } else {
+            flag = true;
+        }
         if (flag_stack) {
-            uStack.push(editText.getText().toString());
-            rStack.clear();
+            if (count == 0) {
+                String str = s.toString();
+                uStack.push(str);
+                rStack.clear();
+            }
+            if (after == 0) {
+                if (!after_last) {
+                    String str = s.toString();
+                    uStack.push(str);
+                    rStack.clear();
+                }
+                after_last = true;
+            } else {
+                after_last = false;
+            }
         }
     }
 
@@ -73,24 +95,23 @@ public class EditorFragment extends Fragment implements TextWatcher {
 
     @Override
     public void afterTextChanged(Editable s) {
-        if (flag) {
-            if (filename.charAt(0) != '*') {
-                filename = "*" + filename;
-                ((MainActivity) getActivity()).setName(filename);
-            }
-        } else {
-            flag = true;
-        }
+
     }
 
     public void undo() {
         if (!uStack.empty()) {
             String str = uStack.pop();
+            if (str.length() > 0) {
+                if (str.charAt(str.length() - 1) == ' ' || str.charAt(str.length() - 1) == '\n') {
+                    str = uStack.pop();
+                }
+            }
             rStack.push(editText.getText().toString());
             flag_stack = false;
             editText.setText(str);
             editText.setSelection(editText.getText().length());
             flag_stack = true;
+            after_last = false;
         }
     }
 
@@ -110,6 +131,7 @@ public class EditorFragment extends Fragment implements TextWatcher {
             try {
                 String str = FileService.read(file);
                 flag_stack = false;
+                flag = false;
                 setText(str);
                 editText.setSelection(editText.getText().length());
                 flag_stack = true;
@@ -176,7 +198,8 @@ public class EditorFragment extends Fragment implements TextWatcher {
         ClipData clipData = clipboardManager.getPrimaryClip();
         if (clipData != null && clipData.getItemCount() > 0) {
             CharSequence text = clipData.getItemAt(0).getText();
-            editText.setText(text);
+            editText.setText(editText.getText().append(text));
+            editText.setSelection(editText.getText().length());
         }
     }
 

@@ -17,14 +17,14 @@ import java.lang.reflect.Method;
 
 public class FileService {
 
-    private FileService(){
+    private FileService() {
 
     }
 
     public static String getStoragePath(Context mContext, boolean is_removale) {
         StorageManager mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
         Class<?> storageVolumeClazz = null;
-        String path="";
+        String path = "";
         try {
             storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
             Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
@@ -54,12 +54,12 @@ public class FileService {
 
     public static String read(File file) throws IOException {
         String str = "";
-        if(file.exists()){
-            FileInputStream fileInputStream=new FileInputStream(file);
+        if (file.exists()) {
+            FileInputStream fileInputStream = new FileInputStream(file);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
-            int len =0;
-            while((len=fileInputStream.read(buffer))!=-1){
+            int len = 0;
+            while ((len = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, len);
             }
             byte[] bytes = outputStream.toByteArray();

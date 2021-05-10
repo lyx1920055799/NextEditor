@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">NextEditor</string>
+    <string name="untitled">未命名</string>
+    <string name="settings">设置</string>
+    <string name="file">文件</string>
+    <string name="new_file">新建</string>
+    <string name="open_file">打开</string>
+    <string name="save">保存</string>
+    <string name="edit">编辑</string>
+    <string name="undo">撤消</string>
+    <string name="redo">重做</string>
+    <string name="save_as">另存为</string>
+    <string name="close">关闭</string>
+    <string name="read_only">只读</string>
+    <string name="select_all">全选</string>
+    <string name="cut">剪切</string>
+    <string name="copy">复制</string>
+    <string name="paste">粘贴</string>
+    <string name="new_folder">新建文件夹</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>o
+    <string name="created_successfully">创建成功</string>
+    <string name="failed_to_create">创建失败</string>
+    <string name="saved_successfully">保存成功</string>
+    <string name="is_overwrite">文件已存在，是否覆盖文件</string>
+    <string name="file_opened">文件已经打开</string>
+    <string name="is_save">文档尚未保存，是否保存并关闭</string>
+    <string name="warning">警告</string>
+    <string name="no">否</string>
+    <string name="yes">是</string>
+</resources>

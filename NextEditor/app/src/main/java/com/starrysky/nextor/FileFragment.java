@@ -36,10 +36,15 @@ public class FileFragment extends Fragment {
     private File file;
     private boolean operation = true;
     private EditorFragment editorFragment;
+    private String fun;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            fun = bundle.getString("fun");
+        }
         return inflater.inflate(R.layout.fragment_file, container, false);
     }
 
@@ -139,9 +144,9 @@ public class FileFragment extends Fragment {
         View view = inflater.inflate(R.layout.edit_text, null);
         final EditText editText = view.findViewById(R.id.edit_text);
         new AlertDialog.Builder(getActivity())
-                .setTitle("新建文件夹")
+                .setTitle(R.string.new_folder)
                 .setView(view)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         File file = new File(path + "/" + editText.getText());
@@ -149,13 +154,13 @@ public class FileFragment extends Fragment {
                             if (file.mkdir()) {
                                 list.add(file);
                                 adapter.notifyDataSetChanged();
-                                Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), R.string.created_successfully, Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(getActivity(), "创建失败", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), R.string.created_successfully, Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
-                }).setNegativeButton("取消", null).show();
+                }).setNegativeButton(R.string.cancel, null).show();
     }
 
     private void saveAs(final File file) {
@@ -163,10 +168,16 @@ public class FileFragment extends Fragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.edit_text, null);
         final EditText editText = view.findViewById(R.id.edit_text);
+        String str = editorFragment.getFilename();
+        if (str.charAt(0) == '*') {
+            str = str.substring(1);
+        }
+        editText.setText(str);
+        editText.setSelection(editText.getText().length());
         new AlertDialog.Builder(getActivity())
-                .setTitle("保存为")
+                .setTitle(R.string.save_as)
                 .setView(view)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         File file = new File(path + "/" + editText.getText());
@@ -185,12 +196,15 @@ public class FileFragment extends Fragment {
                                 }
                                 list.add(file);
                                 adapter.notifyDataSetChanged();
-                                Toast.makeText(getActivity(), "保存成功", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), R.string.saved_successfully, Toast.LENGTH_SHORT).show();
+                                if (fun.equals("close")) {
+                                    ((MainActivity) getActivity()).close();
+                                }
                                 getActivity().onBackPressed();
                             } else {
                                 new AlertDialog.Builder(getActivity())
-                                        .setTitle("文件已存在，是否覆盖文件")
-                                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                        .setTitle(R.string.is_overwrite)
+                                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialogInterface, int i) {
                                                 File file = new File(path + "/" + editText.getText());
@@ -207,17 +221,19 @@ public class FileFragment extends Fragment {
                                                 }
                                                 list.add(file);
                                                 adapter.notifyDataSetChanged();
-                                                Toast.makeText(getActivity(), "保存成功", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(getActivity(), R.string.saved_successfully, Toast.LENGTH_SHORT).show();
+                                                if (fun.equals("close")) {
+                                                    ((MainActivity) getActivity()).close();
+                                                }
                                                 getActivity().onBackPressed();
                                             }
-                                        }).setNegativeButton("取消", null).show();
-
+                                        }).setNegativeButton(R.string.cancel, null).show();
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-                }).setNegativeButton("取消", null).show();
+                }).setNegativeButton(R.string.cancel, null).show();
     }
 
     public void backLast() {

@@ -60,11 +60,11 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
             long KB = 1024;
             long MB = 1024 * KB;
             long GB = 1024 * MB;
-            if (length / KB < 1){
+            if (length / KB < 1) {
                 size = length + "B";
-            } else if (length / KB >= 1 && length / MB < 1){
+            } else if (length / KB >= 1 && length / MB < 1) {
                 size = length / KB + "KB";
-            } else if (length / MB >= 1 && length / GB < 1){
+            } else if (length / MB >= 1 && length / GB < 1) {
                 size = length / MB + "MB";
             } else if (length / GB >= 1) {
                 size = length / GB + "GB";
@@ -81,7 +81,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         FrameLayout item;
-        TextView name,info;
+        TextView name, info;
         ImageView img;
 
         ViewHolder(@NonNull View itemView) {
