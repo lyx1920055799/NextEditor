@@ -1,0 +1,1 @@
+simple, distraction-free text editor

@@ -1,0 +1,1 @@
+<i>NextEditor</i> is a simple text editor without other complicated functions. It's not perfect, but it's basically usable.
