@@ -28,4 +28,9 @@
     <string name="warning">警告</string>
     <string name="no">否</string>
     <string name="yes">是</string>
+    <string name="text_category">文本</string>
+    <string name="size_title">字体大小</string>
+    <string name="show_category">外观</string>
+    <string name="night_title">夜间模式</string>
+    <string name="style_title">字体风格</string>
 </resources>

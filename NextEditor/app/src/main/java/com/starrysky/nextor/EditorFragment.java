@@ -3,6 +3,8 @@ package com.starrysky.nextor;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,6 +17,7 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +50,6 @@ public class EditorFragment extends Fragment implements TextWatcher {
         editText.setFocusable(true);
         editText.setFocusableInTouchMode(true);
         editText.requestFocus();
-
         getView().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,12 +59,19 @@ public class EditorFragment extends Fragment implements TextWatcher {
                 imm.toggleSoftInput(0, InputMethodManager.SHOW_FORCED);
             }
         });
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String familyName = sharedPreferences.getString("style", "monospace");
+        editText.setTypeface(Typeface.create(familyName, Typeface.NORMAL));
+        float fontSize = Float.parseFloat(sharedPreferences.getString("size", "0"));
+        if (fontSize != 0) {
+            editText.setTextSize(fontSize);
+        }
     }
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         if (flag) {
-            if (filename.charAt(0) != '*') {
+            if (filename != null && filename.charAt(0) != '*') {
                 filename = "*" + filename;
                 ((MainActivity) getActivity()).setName(filename);
             }
@@ -159,6 +168,12 @@ public class EditorFragment extends Fragment implements TextWatcher {
         editText.setText(str);
     }
 
+    public void restoreText(String str) {
+        flag = false;
+        setText(str);
+        flag = true;
+    }
+
     public String getFilename() {
         return filename;
     }
@@ -205,5 +220,16 @@ public class EditorFragment extends Fragment implements TextWatcher {
 
     public EditText getEditText() {
         return editText;
+    }
+
+    public String getPath() {
+        if (file != null) {
+            return file.getPath();
+        }
+        return "";
+    }
+
+    public void setPoint() {
+        editText.setSelection(editText.getText().length());
     }
 }

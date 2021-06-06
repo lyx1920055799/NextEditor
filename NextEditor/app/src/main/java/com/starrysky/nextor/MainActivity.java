@@ -3,7 +3,10 @@ package com.starrysky.nextor;
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
@@ -17,6 +20,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -25,6 +29,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -41,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private MenuItem menuItem;
     private int index = 0;
+    private final List<FragmentData> list = new ArrayList<>();
+    private Bundle lastData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,12 +147,70 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         invalidateOptionsMenu();
+        if (getSupportFragmentManager().findFragmentByTag("settings") == null) {
+            restoreData();
+        }
+        if (editorFragment != null) {
+            editorFragment.setPoint();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        FragmentData[] fragmentDatas = new FragmentData[list.size()];
+        for (int i = 0; i < fragmentDatas.length; i++) {
+            fragmentDatas[i] = list.get(i);
+        }
+        list.clear();
+        outState.putParcelableArray("fragment_datas", fragmentDatas);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        lastData = savedInstanceState;
+    }
+
+    public void restoreData() {
+        if (lastData != null) {
+            FragmentData[] fragmentDatas = (FragmentData[]) lastData.getParcelableArray("fragment_datas");
+            restoreFragments(fragmentDatas);
+            lastData = null;
+        }
     }
 
     private void init() {
         immersion();
         permission();
         initView();
+        configs();
+    }
+
+    private void configs() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean dark = sharedPreferences.getBoolean("night", false);
+        changeDayNight(dark);
+    }
+
+    public void changeDayNight(boolean dark) {
+        int currentNightMode = this.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        switch (currentNightMode) {
+            case Configuration.UI_MODE_NIGHT_NO:
+                if (dark) {
+                    saveFragments();
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                }
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                if (!dark) {
+                    saveFragments();
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     private void initView() {
@@ -258,6 +323,27 @@ public class MainActivity extends AppCompatActivity {
         imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
     }
 
+    public void restoreFragments(FragmentData[] fragmentDatas) {
+        index = 0;
+        int current = 0;
+        for (FragmentData fragmentData : fragmentDatas) {
+            menuItem = navigationView.getMenu().add(1, index, 0, fragmentData.getFilename()).setIcon(R.drawable.my_file);
+            EditorFragment editorFragment = new EditorFragment();
+            editorFragment.setFile(new File(fragmentData.getPath()));
+            editorFragment.setFilename(fragmentData.getFilename());
+            startFragment(R.id.container_layout, editorFragment, String.valueOf(index));
+            editorFragment.restoreText(fragmentData.getText());
+            if (fragmentData.isSelected()) {
+                current = index;
+            }
+            index++;
+        }
+        MenuItem item = navigationView.getMenu().findItem(current);
+        if (item != null) {
+            navigationView.getMenu().performIdentifierAction(item.getItemId(), 0);
+        }
+    }
+
     public void save() {
         if (editorFragment != null) {
             editorFragment.write();
@@ -330,10 +416,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void close() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
+    public void saveFragments() {
         if (editorFragment != null) {
+            for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {
+                String tag = getSupportFragmentManager().getFragments().get(i).getTag();
+                if (isNumeric(tag)) {
+                    EditorFragment editorFragment = (EditorFragment) getSupportFragmentManager().findFragmentByTag(tag);
+                    FragmentData fragmentData = new FragmentData();
+                    fragmentData.setText(editorFragment.getText());
+                    fragmentData.setFilename(editorFragment.getFilename());
+                    fragmentData.setPath(editorFragment.getPath());
+                    fragmentData.setSelected(this.editorFragment.getTag().equals(tag));
+                    list.add(fragmentData);
+                    getSupportFragmentManager().beginTransaction().remove(editorFragment).commit();
+                    navigationView.getMenu().removeItem(Integer.parseInt(tag));
+                }
+            }
+            editorFragment = null;
+            actionBar.setTitle("");
+        }
+    }
+
+    public void close() {
+        if (editorFragment != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(editorFragment.getEditText().getWindowToken(), 0);
             int num = 0;
             if (editorFragment.getTag() != null) {
                 num = Integer.parseInt(editorFragment.getTag());
@@ -417,6 +524,26 @@ public class MainActivity extends AppCompatActivity {
                 dialog.show();
             } else {
                 close();
+            }
+        }
+    }
+
+    public void setFontStyle(String familyName) {
+        for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {
+            String tag = getSupportFragmentManager().getFragments().get(i).getTag();
+            if (isNumeric(tag)) {
+                EditorFragment editorFragment = (EditorFragment) getSupportFragmentManager().findFragmentByTag(tag);
+                editorFragment.getEditText().setTypeface(Typeface.create(familyName, Typeface.NORMAL));
+            }
+        }
+    }
+
+    public void setFontSize(float fontSize) {
+        for (int i = 0; i < getSupportFragmentManager().getFragments().size(); i++) {
+            String tag = getSupportFragmentManager().getFragments().get(i).getTag();
+            if (isNumeric(tag)) {
+                EditorFragment editorFragment = (EditorFragment) getSupportFragmentManager().findFragmentByTag(tag);
+                editorFragment.getEditText().setTextSize(fontSize);
             }
         }
     }

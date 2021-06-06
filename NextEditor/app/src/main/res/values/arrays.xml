@@ -1,0 +1,35 @@
+<resources>
+    <string-array name="style_entries">
+        <item>casual</item>
+        <item>cursive</item>
+        <item>monospace</item>
+        <item>sans-serif</item>
+        <item>sans-serif-black</item>
+        <item>sans-serif-condensed</item>
+        <item>sans-serif-condensed-light</item>
+        <item>sans-serif-condensed-medium</item>
+        <item>sans-serif-light</item>
+        <item>sans-serif-medium</item>
+        <item>sans-serif-smallcaps</item>
+        <item>sans-serif-thin</item>
+        <item>serif</item>
+        <item>serif-monospace</item>
+    </string-array>
+
+    <string-array name="style_values">
+        <item>casual</item>
+        <item>cursive</item>
+        <item>monospace</item>
+        <item>sans-serif</item>
+        <item>sans-serif-black</item>
+        <item>sans-serif-condensed</item>
+        <item>sans-serif-condensed-light</item>
+        <item>sans-serif-condensed-medium</item>
+        <item>sans-serif-light</item>
+        <item>sans-serif-medium</item>
+        <item>sans-serif-smallcaps</item>
+        <item>sans-serif-thin</item>
+        <item>serif</item>
+        <item>serif-monospace</item>
+    </string-array>
+</resources>
